@@ -56,10 +56,10 @@ def main():
 
 
 
-    fo = finalizing_outputs(location=w_p.antenna_location,
-                            amplitude=waves,
-                            phase=phase_difference,
-                            volt=voltage)
+    fo = finalizing_outputs(location=w_p.antenna_location, #data of antenna's locations
+                            amplitude=waves,    # results of wave
+                            phase=phase_difference, # results of phases
+                            volt=voltage)   # results of voltages
     fo.write_data()
 
 
