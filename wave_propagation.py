@@ -52,11 +52,15 @@ class WavePropagation(SourceAntenna):
         SourceAntenna.__init__(self,source_fn, radar_fn, dipole)
 
         # Feeding inputs to the medium class to get medium properties
-        medium.Medium.__init__(self, filename_iono= filename_iono, filename_mag = filename_mag, column_names=self.s_columns, num=self.source_n)
+        medium.Medium.__init__(self,
+                               filename_iono= filename_iono,
+                               filename_mag = filename_mag,
+                               column_names=self.s_columns,
+                               num=self.n_source)
 
         # In free space it is equal to 1 otherwise it is a matrix
 
-        self.ref_index = np.sqrt(1 - (80.616*n_e / self.source_charc.f**2 ))
+        self.ref_index = np.sqrt(1 - (80.616*n_e / self.source_charc.frequency_source**2 ))
 
 
         # Calculate traveling time for every source-antenna pair
@@ -80,14 +84,15 @@ class WavePropagation(SourceAntenna):
         a = np.array([[
             np.dot(w_num[i], [0,0,self.distance.iloc[j,i]])
             for j in range(self.radar_n)]
-            for i in range(self.source_n)]).T
+            for i in range(self.n_source)]).T
         # Convert the array to a DataFrame
         a = pd.DataFrame(a,columns=self.s_columns)
 
         # b=w*t
         # For every source calculate temporal part of oscillation w.t
         b = 2 * np.pi * (10 ** 6) * \
-            np.array([self.source_charc.loc[i, 'f'] * self.time.iloc[:, i] for i in range(self.source_n)]).T
+            np.array([self.source_charc.loc[i, 'frequency_source'] * \
+                      self.time.iloc[:, i] for i in range(self.n_source)]).T
         # Convert it to a DataFrame
         b = pd.DataFrame(b,columns=self.s_columns)
 
@@ -131,7 +136,7 @@ class WavePropagation(SourceAntenna):
             - Free space
             - The wave propagates along z direction
 
-        The wave considered as a combination of amplitude, Amp and oscillation, osc.
+        The wave considered as a combination of amplitude, E_source and oscillation, osc.
         Oscillation part contains the phase.
 
         :return:
@@ -145,12 +150,12 @@ class WavePropagation(SourceAntenna):
         t = self.time
 
         # Amplitudes
-        #     Amp[:,i] = [Amp0[i],0,0]  # plane wave traveling along z direction
+        #     E_source[:,i] = [E_source[i],0,0]  # plane wave traveling along z direction
         # assuming Ey=Ez=0
-        Amp = np.zeros([self.source_n,3])
+        E_source = np.zeros([self.n_source,3])
         # For every source gets the amplitude
-        for s in range(self.source_n):
-            Amp[:,s] = self.source_charc.A_s[s]
+        for s in range(self.n_source):
+            E_source[:,s] = self.source_charc.A_s[s]
 
         #calculate the phase
         phase = self.wtkr()
@@ -173,15 +178,15 @@ class WavePropagation(SourceAntenna):
         #       '\nPolarization:\n',Jones_vec)
 
         # Make an empty DataFrame for result of the received field
-        wave = pd.DataFrame(np.zeros([self.radar_n,self.source_n]),columns=self.s_columns)
-        phase_final = pd.DataFrame(np.zeros([self.radar_n,self.source_n]),columns=self.s_columns)
+        wave = pd.DataFrame(np.zeros([self.radar_n,self.n_source]),columns=self.s_columns)
+        phase_final = pd.DataFrame(np.zeros([self.radar_n,self.n_source]),columns=self.s_columns)
 
         # Calculate the wave equation for every set of antenna-source
         # wave= amp*real(Jones_vec*osc) , plane wave
-        for j in range(self.source_n):
+        for j in range(self.n_source):
             for i in range(self.radar_n):
                 non_amp = osc_dipole.iloc[i, j]*Jones_vec[j,:]
-                w = [Amp[j,:]* non_amp.real]
+                w = [E_source[j,:]* non_amp.real]
                 wave.iloc[[i],j] = pd.Series(w,index=[i])
 
         return wave
@@ -206,7 +211,7 @@ class WavePropagation(SourceAntenna):
 
             antenna_w_total = w.iloc[i_a,0]
 
-            for i_s in range(self.source_n):
+            for i_s in range(self.n_source):
                 if i_s !=0:
                     # Calculate the rotation matrix to rotate ray path attached reference frame to the original refernce
                     rotation_matrix = geometry.rotate_refernce(self.path_vec.iloc[i_a,i_s])
@@ -225,17 +230,19 @@ class WavePropagation(SourceAntenna):
 
 
 
-    def voltage(self)-> np.array:
+    def voltage(self, w)-> np.array:
         '''
         multiplies the total electric field to the length of the of antenna in each direction
         :return: The voltage at the antenna
         '''
         total_voltage=0
         l = 3.8     #antenna length
-        antenna_length = [l,l,0]
-        w_ = self.antennna_wave_received()
 
-        w = self.vector_superposition(w_)
+
+        antenna_length = [l,l,0]
+        # w_ = self.antennna_wave_received()
+
+        # w = self.vector_superposition(w_)
 
         total_voltage = list(map(lambda x : x.real*antenna_length,w))
         # total_voltage = total_voltage.applymap(lambda x: np.sqrt(np.dot(x,x)))

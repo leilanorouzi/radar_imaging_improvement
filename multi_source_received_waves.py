@@ -2,61 +2,11 @@ import warnings
 
 warnings.filterwarnings("default", category=DeprecationWarning)
 
-import numpy as np
-# from multi_source import *
 import wave_propagation as wp
 from visualization import *
-# from source_antenna import *
-# from antenna import *
-import os
-import sys
-from tkinter import Tk
-from tkinter import filedialog
+from initial_setup import *
+from finalizing_outputs import *
 
-
-def select_directory():
-    '''
-    This function, opens a window and asks the user to choose the folder that contains the files
-    :return: the path of the input data
-    :rtype: str
-    '''
-
-    # You can choose the directory of the input data
-    root = Tk()
-    root.geometry('200x150')
-    root.withdraw()
-
-    input_dir = filedialog.askdirectory(
-                                        title='Choose the directory of the data',
-                                        initialdir=os.getcwd(),
-                                        mustexist=True) + '/'
-
-    # root.mainloop()
-    root.destroy()
-
-    return input_dir
-
-def read_data_paths():
-
-    # -------------------------------------------------
-    # Getting input data. There are 2 ways to import the data
-    # 1- You can select the data folder
-    input_dir = select_directory()
-    # 2- or you can type it in here directly.
-    # If you would like to use this method please, comment above line and uncomment following line.
-    # input_dir = "data/"  # ./data/
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-    # file name of the antenna
-    rfn = os.path.join(input_dir,'03-tri50_2.txt')
-    # file name of the source
-    sfn = os.path.join(input_dir, 'source2.txt')
-    # file path of ionospheric parameter
-    filename_iono = os.path.join (input_dir, 'ionospheric_parameters.txt')
-    # file path of magnetic feild parameter
-    filename_mag = os.path.join (input_dir,'igrfwmmData.json')
-
-    return rfn,sfn,filename_iono,filename_mag
 
 def main():
 
@@ -100,12 +50,21 @@ def main():
     phase_difference = w_p.phase_diff()
     print('\nPhase difference in degree:\n', np.degrees(phase_difference).round(3))
     print("\x1b[1;31m===============================================================================\n\n\x1b[0m")
-    #
-    # # To obtain the voltage call voltage function
-    # voltage = ms.voltage()
-    #
-    # -------------------------------------------------
-    # The end
+
+    # To obtain the voltage call voltage function
+    voltage = w_p.voltage(waves)
+
+
+
+    fo = finalizing_outputs(location=w_p.antenna_location,
+                            amplitude=waves,
+                            phase=phase_difference,
+                            volt=voltage)
+    fo.write_data()
+
+
+
+
     print('FINISHED')
 
     pass

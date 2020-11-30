@@ -38,13 +38,13 @@ class SourceAntenna(Source, Antenna):
         :rtype: pandas.Dataframe
         '''
 
-        dist_arr = pd.DataFrame(np.zeros((self.radar_n, self.source_n)),
+        dist_arr = pd.DataFrame(np.zeros((self.radar_n, self.n_source)),
                                 columns=self.s_columns)
-        sa_vec = pd.DataFrame(np.zeros((self.radar_n, self.source_n)),
+        sa_vec = pd.DataFrame(np.zeros((self.radar_n, self.n_source)),
                               columns=self.s_columns)
 
         for i in range(self.radar_n):
-            for j in range(self.source_n):
+            for j in range(self.n_source):
                 dist_arr.iloc[i, j] = geometry.dist(self.source_location[j, :], self.antenna_location[i, :])
                 sa_vec.iloc[[i], j] = pd.Series([-self.source_location[j, :] + self.antenna_location[i, :]], index=[i])
         return dist_arr, sa_vec
@@ -66,8 +66,8 @@ class SourceAntenna(Source, Antenna):
         '''
 
         # the data frame to find the angle of eache dipoles respect to the ray path
-        theta = pd.DataFrame(np.zeros([self.radar_n, self.source_n]), columns=self.s_columns)
-        for i_s in range(self.source_n):
+        theta = pd.DataFrame(np.zeros([self.radar_n, self.n_source]), columns=self.s_columns)
+        for i_s in range(self.n_source):
             for i_a in range(self.radar_n):
                 s = self.source_location[i_s]  # The location of sources
                 a = self.antenna_location[i_a]  # The location of antennas

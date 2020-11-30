@@ -1,0 +1,11 @@
+{
+  "input_dir": "./data/",
+  "date": "20201215",
+  "time": "223344",
+  "latitude": "18",
+  "logitude": "-66",
+  "antenna_file": "03-tri50_2.txt",
+  "source_file": "source2.txt",
+  "ionosphere_file": "ionospheric_parameters.txt",
+  "magnetic_file": "igrfwmmData.json"
+}

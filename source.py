@@ -15,21 +15,25 @@ class Source(object):
     '''
     def __init__(self,source_fn,dipole):
 
-        self.source_fn = source_fn
+        self.source_fn = source_fn # source file name
+        self.dipole = dipole    # if the source is a dipole
 
-        self.dipole = dipole
+        #read data from the file
         self.source_charc = self.read_source()
-        self.source_n = len(self.source_charc)
-        self.s_columns = ['s'+str(i+1) for i in range(self.source_n)]
+
+        self.n_source = len(self.source_charc)
+        self.s_columns = ['s'+str(i+1) for i in range(self.n_source)]
 
         # In free space it is equal to 1 otherwise it is a matrix
-        self.ref_index = np.sqrt(1 - (80.616 * n_e / self.source_charc.f ** 2))
+        self.ref_index = np.sqrt(1 - (80.616 * n_e / self.source_charc.frequency_source ** 2))
 
         # Calculating the wave number and adding that to the source_charc dataframe
         self.source_charc = self.wave_num()
 
         # Taking coordination and to convert to meter
-        self.source_location =  self. source_charc.loc[:,['x','y','z']].values * 1000
+        self.source_location =  self. source_charc.loc[:,['x_vector_source',
+                                                          'y_vector_source',
+                                                          'z_vector_source']].values * 1000
 
         # -------------- polarization parameters ----------------
         self.polar_stat = 'Unpolarized'
@@ -52,7 +56,12 @@ class Source(object):
         '''
 
         # the name of the columns
-        column_names = ['x','y','z','A_s','theta_s','f']
+        column_names = ['x_vector_source',
+                        'y_vector_source',
+                        'z_vector_source',
+                        'A_s',
+                        'theta_s',
+                        'frequency_source']
 
         # To open the file
         read = open(self.source_fn, 'r')
@@ -85,10 +94,10 @@ class Source(object):
         # kx=ky=0
         # kz=ks
         df = self.source_charc
-        ks = round(2 * np.pi * self.ref_index * (df.f * (10 ** 6)) / c0, 4)
+        ks = round(2 * np.pi * self.ref_index * (df.frequency_source * (10 ** 6)) / c0, 4)
 
         df['k'] = None
-        for i in range(self.source_n):
+        for i in range(self.n_source):
             df.loc[[i], 'k'] = pd.Series([[0, 0, ks[i]]], index=[i])
         return df
 
@@ -111,7 +120,7 @@ class Source(object):
         alpha_x = self.alpha_x  # phase angle
         alpha_y = self.alpha_y  # pahse angle
 
-        a = np.zeros([self.source_n,3],dtype=complex)
+        a = np.zeros([self.n_source,3],dtype=complex)
 
         if polar_stat.lower()=='unpolarized':
             if ((alpha_x!=0) & (alpha_y!=0)) :
@@ -134,7 +143,7 @@ class Source(object):
                 else:
                     print("\x1b[1;31m THE POLARIZATION IS ELLIPTICAL.\x1b[0m\n")
 
-        for s in range(self.source_n):
+        for s in range(self.n_source):
             a[s,:] = [ cmath.exp(complex(0, 1)*alpha_x) ,
                        cmath.exp(complex(0, 1)*alpha_y),
                        0]

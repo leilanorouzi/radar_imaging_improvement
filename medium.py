@@ -226,7 +226,7 @@ class Medium(object):
 #
 # source = Source(source_fn=sfn, dipole= False)
 #
-# iono = Medium(filename_iono= filename_iono, filename_mag = filename_mag, column_names=source.s_columns, num=source.source_n)
+# iono = Medium(filename_iono= filename_iono, filename_mag = filename_mag, column_names=source.s_columns, num=source.n_source)
 #
 # # iono.plot_iono()
 # print(iono.AppeltonHartree(k=source.source_charc.k , f=source.source_charc.f*10**6))

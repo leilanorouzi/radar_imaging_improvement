@@ -33,7 +33,7 @@ class Antenna(object):
 
         for line in read:
             i += 1
-            if 30 < i < 34:  # The lines related to the antenna location
+            if (30 < i < 34) & (line[0] != "#"):  # The lines related to the antenna location
                 # extracting values from the line
                 newline = reading_files.read_line(line, column_names)
 
